@@ -6,3 +6,17 @@
     </div>
   </div>
 </template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+import useKeydown from '@/composables/useKeydown.ts';
+
+export default defineComponent({
+  setup(props, { emit }) {
+    // prettier-ignore
+    useKeydown([
+      { key: 'Escape', fn: () => { emit('closeModal'); }},
+    ]);
+  },
+});
+</script>
