@@ -18,7 +18,10 @@ import { EmailItem } from '@/types';
 
 export default defineComponent({
   props: {
-    email: Object as PropType<EmailItem>,
+    email: {
+      type: Object as PropType<EmailItem>,
+      required: true,
+    },
   },
   setup() {
     return { format, marked };
