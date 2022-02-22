@@ -22,7 +22,7 @@
     </tbody>
   </table>
   <ModalView v-if="openedEmail" @close-modal="openedEmail = null">
-    <MailView :email="openedEmail" />
+    <MailView :email="openedEmail" @change-email="changeEmail" />
   </ModalView>
 </template>
 
@@ -33,6 +33,14 @@ import axios from 'axios';
 import MailView from '@/components/MailView.vue';
 import ModalView from '@/components/ModalView.vue';
 import { EmailItem } from '@/types';
+
+interface ChangeEmail {
+  toggleRead?: () => void;
+  toggleArchive?: () => void;
+  save?: () => Promise<void> | void;
+  closeModal?: () => void;
+  changeIndex?: number;
+}
 
 export default defineComponent({
   components: {
@@ -51,8 +59,11 @@ export default defineComponent({
     const openedEmail = ref<EmailItem | null>(null);
 
     function openEmail(email: EmailItem) {
-      email.read = true;
-      updateEmail(email);
+      if (email) {
+        email.read = true;
+        updateEmail(email);
+      }
+
       openedEmail.value = email;
     }
 
@@ -65,6 +76,46 @@ export default defineComponent({
       axios.put(`http://localhost:3000/emails/${email.id}`, email);
     }
 
+    function changeEmail({
+      toggleRead,
+      toggleArchive,
+      save,
+      closeModal,
+      changeIndex,
+    }: ChangeEmail) {
+      const email = openedEmail.value;
+
+      if (!email) return;
+
+      if (toggleRead) {
+        email.read = !email.read;
+      }
+
+      if (toggleArchive) {
+        email.archived = !email.archived;
+      }
+
+      if (save) {
+        updateEmail(email);
+      }
+
+      if (closeModal) {
+        openedEmail.value = null;
+      }
+
+      if (changeIndex) {
+        if (!openedEmail.value) {
+          return;
+        }
+
+        const emails = unarchivedEmails.value;
+        const currentIndex = emails.indexOf(openedEmail.value);
+        const newEmail = emails[currentIndex + changeIndex];
+
+        openEmail(newEmail);
+      }
+    }
+
     return {
       format,
       emails,
@@ -73,6 +124,7 @@ export default defineComponent({
       openedEmail,
       openEmail,
       archiveEmail,
+      changeEmail,
     };
   },
 });
