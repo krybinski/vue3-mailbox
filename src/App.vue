@@ -1,5 +1,6 @@
 <template>
   <h1>Vue Mail Inbox</h1>
+  <p>{{ emailSelection.emails.size }} emails selected</p>
 
   <Suspense>
     <template #default>
@@ -12,14 +13,21 @@
 </template>
 
 <script lang="ts">
+import { defineComponent } from '@vue/runtime-core';
 import MailTable from '@/components/MailTable.vue';
+import useEmailSelection from '@/composables/useEmailSelection';
 
-export default {
+export default defineComponent({
   name: 'App',
   components: {
     MailTable,
   },
-};
+  setup() {
+    return {
+      emailSelection: useEmailSelection(),
+    };
+  },
+});
 </script>
 
 <style>

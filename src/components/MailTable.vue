@@ -1,5 +1,4 @@
 <template>
-  <p>{{ emailSelection.emails.size }} emails selected</p>
   <table class="mail-table">
     <tbody>
       <tr
@@ -35,11 +34,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, reactive } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 import { format } from 'date-fns';
 import axios from 'axios';
 import MailView from '@/components/MailView.vue';
 import ModalView from '@/components/ModalView.vue';
+import useEmailSelection from '@/composables/useEmailSelection';
 import { EmailItem } from '@/types';
 
 interface ChangeEmail {
@@ -58,7 +58,6 @@ export default defineComponent({
   async setup() {
     const response = await axios.get<EmailItem[]>('http://localhost:3000/emails');
     const emails = ref(response.data);
-    const selected = reactive(new Set());
     const sortedEmails = computed(() => {
       return [...emails.value].sort((a, b) => (a.sentAt <= b.sentAt ? 1 : -1));
     });
@@ -66,16 +65,6 @@ export default defineComponent({
       return sortedEmails.value.filter((e) => !e.archived);
     });
     const openedEmail = ref<EmailItem | null>(null);
-    const emailSelection = {
-      emails: selected,
-      toggle: (email: EmailItem) => {
-        if (selected.has(email)) {
-          selected.delete(email);
-        } else {
-          selected.add(email);
-        }
-      },
-    };
 
     function openEmail(email: EmailItem) {
       if (email) {
@@ -144,7 +133,7 @@ export default defineComponent({
       openEmail,
       archiveEmail,
       changeEmail,
-      emailSelection,
+      emailSelection: useEmailSelection(),
     };
   },
 });
