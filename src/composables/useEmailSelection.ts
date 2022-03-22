@@ -1,5 +1,5 @@
-import { EmailItem } from './../types';
 import { reactive } from 'vue';
+import { EmailItem } from './../types';
 
 const emails = reactive(new Set());
 
@@ -12,7 +12,17 @@ const useEmailSelection = () => {
     }
   };
 
-  return { emails, toggle };
+  const clear = () => {
+    emails.clear();
+  };
+
+  const addMultiple = (newEmails: EmailItem[]) => {
+    newEmails.forEach((email) => {
+      emails.add(email);
+    });
+  };
+
+  return { emails, toggle, clear, addMultiple };
 };
 
 export default useEmailSelection;
