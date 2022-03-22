@@ -1,9 +1,13 @@
 <template>
-  <BulkActionBar :emails="unarchivedEmails" />
+  <button @click="selectScreen('inbox')" :disabled="selectedScreen === 'inbox'">Inbox</button>
+  <button @click="selectScreen('archived')" :disabled="selectedScreen === 'archived'">
+    Archived
+  </button>
+  <BulkActionBar :emails="filteredEmails" />
   <table class="mail-table">
     <tbody>
       <tr
-        v-for="email in unarchivedEmails"
+        v-for="email in filteredEmails"
         :key="email.id"
         :class="['clickable', email.read ? 'read' : '']"
       >
@@ -61,13 +65,22 @@ export default defineComponent({
   async setup() {
     const response = await axios.get<EmailItem[]>('http://localhost:3000/emails');
     const emails = ref(response.data);
+    const selectedScreen = ref('inbox');
     const sortedEmails = computed(() => {
       return [...emails.value].sort((a, b) => (a.sentAt <= b.sentAt ? 1 : -1));
     });
     const unarchivedEmails = computed(() => {
       return sortedEmails.value.filter((e) => !e.archived);
     });
+    const filteredEmails = computed(() => {
+      if (selectedScreen.value === 'inbox') {
+        return sortedEmails.value.filter((e) => !e.archived);
+      } else {
+        return sortedEmails.value.filter((e) => e.archived);
+      }
+    });
     const openedEmail = ref<EmailItem | null>(null);
+    const emailSelection = useEmailSelection();
 
     function openEmail(email: EmailItem) {
       if (email) {
@@ -127,6 +140,11 @@ export default defineComponent({
       }
     }
 
+    function selectScreen(screen: string) {
+      selectedScreen.value = screen;
+      emailSelection.clear();
+    }
+
     return {
       format,
       emails,
@@ -136,7 +154,10 @@ export default defineComponent({
       openEmail,
       archiveEmail,
       changeEmail,
-      emailSelection: useEmailSelection(),
+      emailSelection,
+      selectedScreen,
+      filteredEmails,
+      selectScreen,
     };
   },
 });
