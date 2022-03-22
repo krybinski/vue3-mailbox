@@ -1,8 +1,13 @@
 <template>
+  <button @click="selectScreen('inbox')" :disabled="selectedScreen === 'inbox'">Inbox</button>
+  <button @click="selectScreen('archived')" :disabled="selectedScreen === 'archived'">
+    Archived
+  </button>
+  <BulkActionBar :emails="filteredEmails" />
   <table class="mail-table">
     <tbody>
       <tr
-        v-for="email in unarchivedEmails"
+        v-for="email in filteredEmails"
         :key="email.id"
         :class="['clickable', email.read ? 'read' : '']"
       >
@@ -10,7 +15,7 @@
           <input
             type="checkbox"
             @click="emailSelection.toggle(email)"
-            :selected="emailSelection.emails.has(email)"
+            :checked="emailSelection.emails.has(email)"
           />
         </td>
         <td @click="openEmail(email)">{{ email.from }}</td>
@@ -39,6 +44,7 @@ import { format } from 'date-fns';
 import axios from 'axios';
 import MailView from '@/components/MailView.vue';
 import ModalView from '@/components/ModalView.vue';
+import BulkActionBar from '@/components/BulkActionBar.vue';
 import useEmailSelection from '@/composables/useEmailSelection';
 import { EmailItem } from '@/types';
 
@@ -52,19 +58,29 @@ interface ChangeEmail {
 
 export default defineComponent({
   components: {
+    BulkActionBar,
     MailView,
     ModalView,
   },
   async setup() {
     const response = await axios.get<EmailItem[]>('http://localhost:3000/emails');
     const emails = ref(response.data);
+    const selectedScreen = ref('inbox');
     const sortedEmails = computed(() => {
       return [...emails.value].sort((a, b) => (a.sentAt <= b.sentAt ? 1 : -1));
     });
     const unarchivedEmails = computed(() => {
       return sortedEmails.value.filter((e) => !e.archived);
     });
+    const filteredEmails = computed(() => {
+      if (selectedScreen.value === 'inbox') {
+        return sortedEmails.value.filter((e) => !e.archived);
+      } else {
+        return sortedEmails.value.filter((e) => e.archived);
+      }
+    });
     const openedEmail = ref<EmailItem | null>(null);
+    const emailSelection = useEmailSelection();
 
     function openEmail(email: EmailItem) {
       if (email) {
@@ -124,6 +140,11 @@ export default defineComponent({
       }
     }
 
+    function selectScreen(screen: string) {
+      selectedScreen.value = screen;
+      emailSelection.clear();
+    }
+
     return {
       format,
       emails,
@@ -133,7 +154,10 @@ export default defineComponent({
       openEmail,
       archiveEmail,
       changeEmail,
-      emailSelection: useEmailSelection(),
+      emailSelection,
+      selectedScreen,
+      filteredEmails,
+      selectScreen,
     };
   },
 });
