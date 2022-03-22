@@ -1,4 +1,4 @@
-# Vue 3 - Mailbox
+# Vue 3 - Mailbox app
 
 ## Project setup
 
@@ -6,13 +6,11 @@
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### Compiles and hot-reloads for development (run in two separe terminals)
 
 ```
 npm run serve
 ```
-
-### Run json-server
 
 ```
 npm run json-server
