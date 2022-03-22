@@ -1,20 +1,28 @@
 <template>
+  <p>{{ emailSelection.emails.size }} emails selected</p>
   <table class="mail-table">
     <tbody>
       <tr
         v-for="email in unarchivedEmails"
         :key="email.id"
         :class="['clickable', email.read ? 'read' : '']"
-        @click="openEmail(email)"
       >
-        <td><input type="checkbox" /></td>
-        <td>{{ email.from }}</td>
         <td>
+          <input
+            type="checkbox"
+            @click="emailSelection.toggle(email)"
+            :selected="emailSelection.emails.has(email)"
+          />
+        </td>
+        <td @click="openEmail(email)">{{ email.from }}</td>
+        <td @click="openEmail(email)">
           <p>
             <strong>{{ email.subject }}</strong> - {{ email.body }}
           </p>
         </td>
-        <td class="date">{{ format(new Date(email.sentAt), 'MMM do yyyy') }}</td>
+        <td class="date" @click="openEmail(email)">
+          {{ format(new Date(email.sentAt), 'MMM do yyyy') }}
+        </td>
         <td>
           <button @click="archiveEmail(email)">Archive</button>
         </td>
@@ -27,7 +35,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, reactive } from 'vue';
 import { format } from 'date-fns';
 import axios from 'axios';
 import MailView from '@/components/MailView.vue';
@@ -50,13 +58,24 @@ export default defineComponent({
   async setup() {
     const response = await axios.get<EmailItem[]>('http://localhost:3000/emails');
     const emails = ref(response.data);
+    const selected = reactive(new Set());
     const sortedEmails = computed(() => {
-      return [...emails.value].sort((e1, e2) => (e1.sentAt <= e2.sentAt ? 1 : -1));
+      return [...emails.value].sort((a, b) => (a.sentAt <= b.sentAt ? 1 : -1));
     });
     const unarchivedEmails = computed(() => {
       return sortedEmails.value.filter((e) => !e.archived);
     });
     const openedEmail = ref<EmailItem | null>(null);
+    const emailSelection = {
+      emails: selected,
+      toggle: (email: EmailItem) => {
+        if (selected.has(email)) {
+          selected.delete(email);
+        } else {
+          selected.add(email);
+        }
+      },
+    };
 
     function openEmail(email: EmailItem) {
       if (email) {
@@ -125,6 +144,7 @@ export default defineComponent({
       openEmail,
       archiveEmail,
       changeEmail,
+      emailSelection,
     };
   },
 });
