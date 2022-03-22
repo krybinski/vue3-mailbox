@@ -1,7 +1,11 @@
 import { reactive } from 'vue';
+import axios from 'axios';
 import { EmailItem } from './../types';
 
-const emails = reactive(new Set());
+type SaveSelectedFn = (email: EmailItem) => void;
+type SaveSelected = (fn: SaveSelectedFn) => void;
+
+const emails = reactive<Set<EmailItem>>(new Set());
 
 const useEmailSelection = () => {
   const toggle = (email: EmailItem) => {
@@ -22,7 +26,21 @@ const useEmailSelection = () => {
     });
   };
 
-  return { emails, toggle, clear, addMultiple };
+  const saveSelected: SaveSelected = (fn) => {
+    emails.forEach((email) => {
+      fn(email);
+      axios.put(`http://localhost:3000/emails/${email.id}`, email);
+    });
+  };
+
+  const markRead = () => saveSelected((email) => (email.read = true));
+  const markUnread = () => saveSelected((email) => (email.read = false));
+  const archive = () => {
+    saveSelected((email) => (email.archived = true));
+    clear();
+  };
+
+  return { emails, toggle, clear, addMultiple, markRead, markUnread, archive };
 };
 
 export default useEmailSelection;
