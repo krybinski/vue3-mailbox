@@ -5,9 +5,19 @@ import { EmailItem } from './../types';
 type SaveSelectedFn = (email: EmailItem) => void;
 type SaveSelected = (fn: SaveSelectedFn) => void;
 
+interface UseEmailSelection {
+  emails: Set<EmailItem>;
+  toggle: (email: EmailItem) => void;
+  clear: () => void;
+  addMultiple: (newEmails: EmailItem[]) => void;
+  markRead: () => void;
+  markUnread: () => void;
+  archive: () => void;
+}
+
 const emails = reactive<Set<EmailItem>>(new Set());
 
-const useEmailSelection = () => {
+const useEmailSelection = (): UseEmailSelection => {
   const toggle = (email: EmailItem) => {
     if (emails.has(email)) {
       emails.delete(email);
